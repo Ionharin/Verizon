@@ -1,52 +1,104 @@
-CREATE KEYSPACE verizon WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '3'}  AND durable_writes = true;
+CREATE KEYSPACE fleet WITH replication = {'class': 'NetworkTopologyStrategy', 'DC1': '3'}  AND durable_writes = true;
 
-CREATE TABLE verizon.subscriber (
-    account_id text,
-    subscriber_id text,
-    phone_number text,
-    PRIMARY KEY (account_id, subscriber_id)
-) WITH CLUSTERING ORDER BY (subscriber_id ASC);
+CREATE TABLE fleet.metrics (
+    fleet_id text PRIMARY KEY,
+    idle_time double,
+    vehicles int
+) WITH bloom_filter_fp_chance = 0.01
+    AND caching = '{"keys":"ALL", "rows_per_partition":"NONE"}'
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND dclocal_read_repair_chance = 0.1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair_chance = 0.0
+    AND speculative_retry = '99.0PERCENTILE';
 
-CREATE TABLE verizon.account (
-    account_id text PRIMARY KEY,
-    city text,
-    email text,
-    first_name text,
-    last_name text,
-    name_prefix text,
-    name_suffix text,
-    state text,
-    street_address text,
-    subscribers set<text>,
-    zip text
-);
+CREATE TABLE fleet.vehicle_hist (
+    fleet_id text,
+    vin text,
+    day int,
+    time timestamp,
+    hour int,
+    idle_time double,
+    PRIMARY KEY ((fleet_id, vin, day), time)
+) WITH CLUSTERING ORDER BY (time DESC)
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = '{"keys":"ALL", "rows_per_partition":"NONE"}'
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND dclocal_read_repair_chance = 0.1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair_chance = 0.0
+    AND speculative_retry = '99.0PERCENTILE';
 
-CREATE TABLE verizon.data_usage (
-    subscriber_id text,
-    date timestamp,
-    bytes_dn double,
-    bytes_total double,
-    bytes_up double,
+CREATE TABLE fleet.fleet_daily_rollup (
+    fleet_id text,
+    day int,
+    idle_time double,
+    PRIMARY KEY (fleet_id, day)
+) WITH CLUSTERING ORDER BY (day ASC)
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = '{"keys":"ALL", "rows_per_partition":"NONE"}'
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND dclocal_read_repair_chance = 0.1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair_chance = 0.0
+    AND speculative_retry = '99.0PERCENTILE';
+
+CREATE TABLE fleet.fleet_hourly_rollup (
+    fleet_id text,
     day int,
     hour int,
-    month int,
-    url text,
-    year int,
-    PRIMARY KEY (subscriber_id, date)
-) WITH CLUSTERING ORDER BY (date ASC);
+    idle_time double,
+    PRIMARY KEY ((fleet_id, day), hour)
+) WITH CLUSTERING ORDER BY (hour ASC)
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = '{"keys":"ALL", "rows_per_partition":"NONE"}'
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND dclocal_read_repair_chance = 0.1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair_chance = 0.0
+    AND speculative_retry = '99.0PERCENTILE';
 
-CREATE TABLE verizon.account_by_phone (
-    phone_number text,
-    account_id text,
-    first_name text,
-    last_name text,
-    PRIMARY KEY (phone_number, account_id)
-) WITH CLUSTERING ORDER BY (account_id ASC);
-
-CREATE TABLE verizon.account_by_email (
-    email text,
-    account_id text,
-    first_name text,
-    last_name text,
-    PRIMARY KEY (email, account_id)
-) WITH CLUSTERING ORDER BY (account_id ASC);
+CREATE TABLE fleet.vehicle_daily_rollup (
+    fleet_id text,
+    day int,
+    idle_time double,
+    vin text,
+    PRIMARY KEY ((fleet_id, day), idle_time, vin)
+) WITH CLUSTERING ORDER BY (idle_time ASC, vin ASC)
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = '{"keys":"ALL", "rows_per_partition":"NONE"}'
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND dclocal_read_repair_chance = 0.1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair_chance = 0.0
+    AND speculative_retry = '99.0PERCENTILE';

@@ -23,6 +23,7 @@ public class StatsFutureSet extends AbstractFutureManager{
 	numInserted = new AtomicLong(0);
     }
     
+    
     public boolean add(ResultSetFuture future, final String line){
     	return this.add(future, line, 0);
     }
