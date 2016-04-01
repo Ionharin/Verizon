@@ -1,0 +1,142 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block scripts %}
+<!--[if lt IE 9]><script language="javascript" type="text/javascript" src="{{url_for('.static', filename='excanvas.js')}}"></script><![endif]-->
+<script language="javascript" type="text/javascript" src="{{url_for('.static', filename='jquery.min.js')}}"></script>
+<script language="javascript" type="text/javascript" src="{{url_for('.static', filename='jquery.jqplot.min.js')}}"></script>
+<script language="javascript" type="text/javascript" src="{{url_for('.static', filename='plugins/jqplot.barRenderer.js')}}"></script>
+<script language="javascript" type="text/javascript" src="{{url_for('.static', filename='plugins/jqplot.categoryAxisRenderer.js')}}"></script>
+
+<script language="javascript" type="text/javascript">
+$(document).ready(function(){
+    // A Bar chart from a single series will have all the bar colors the same.
+    var fleet_data = {{fleet_data}};
+    $('#chart1').jqplot([fleet_data], {
+        animate: false,
+        title:'Summary by Date',
+        seriesDefaults:{
+            renderer:$.jqplot.BarRenderer
+        },
+        axes:{
+            xaxis:{
+                renderer: $.jqplot.CategoryAxisRenderer
+            }
+        }
+    });
+
+    $('#chart1').bind('jqplotDataClick', 
+        function (ev, seriesIndex, pointIndex, data) {
+            $('#day').val(fleet_data[pointIndex][0]);
+        }
+    );
+
+    var fleet_top = {{ fleet_top|safe }};
+    $('#chart_top').jqplot([fleet_top], {
+        title:'Top 10 Vehicles',
+        seriesDefaults:{
+            renderer:$.jqplot.BarRenderer,
+            rendererOptions: {
+                varyBarColor: true
+            }
+        },
+        axes:{
+            xaxis:{
+                renderer: $.jqplot.CategoryAxisRenderer
+            }
+        }
+    });
+
+    $('#chart_top').bind('jqplotDataClick',
+        function (ev, seriesIndex, pointIndex, data) {
+            $('#vin').val(fleet_top[pointIndex][0]);
+        }
+    );
+
+    var fleet_bottom = {{ fleet_bottom|safe }};
+    $('#chart_bottom').jqplot([fleet_bottom], {
+        title:'Bottom 10 Vehicles',
+        seriesDefaults:{
+            renderer:$.jqplot.BarRenderer,
+            rendererOptions: {
+                varyBarColor: true
+            }
+        },
+        axes:{
+            xaxis:{
+                renderer: $.jqplot.CategoryAxisRenderer
+            }
+        }
+    });
+
+    $('#chart_bottom').bind('jqplotDataClick',
+        function (ev, seriesIndex, pointIndex, data) {
+            $('#vin').val(fleet_bottom[pointIndex][0]);
+        }
+    );
+
+    var vehicle_plot = $.jqplot ('vehicle_plot', [{{vehicle_data}}]);
+
+
+});
+</script>
+
+{% endblock %}
+
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" type="text/css" href="{{url_for('.static', filename='jquery.jqplot.css')}}">
+{% endblock %}
+
+{% block title %}DataStax!{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-inverse" role="navigation">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Clear Dashboard</a>
+        </div>    
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+		<div class="col-md-4">
+                    <img src="{{url_for('.static', filename='verizon.jpg')}}" class="img-responsive" alt="VERIZON">
+                    <br>
+                    <div class="well">{{ wtf.quick_form(form) }}</div>
+                    <br>
+                    <img src="{{url_for('.static', filename='logo.png')}}" class="img-responsive" alt="DATASTAX">
+                </div>
+
+<div class="col-md-8">
+<div class="row">                    
+<div class="col-md-6">
+<div class="alert alert-info" role="alert">
+  <span class="glyphicon glyphicon-road" aria-hidden="true"></span>
+  Total Vehicles: <h3>{{vehicles}}</h3>
+</div>
+</div>
+
+<div class="col-md-6">
+<div class="alert alert-danger" role="alert">
+  <span class="glyphicon glyphicon-scale" aria-hidden="true"></span>
+  Total Idle: <h3>{{idle}}</h3>
+</div>
+</div>
+</div>
+                 <div class="row">
+                    <div id="chart1" style="height:400px;width:800px;"></div>
+                </div>
+	</div>
+        <div class="row">
+                <div class="col-md-6"><div id="chart_top" style="height:400px;width:600px;"></div></div>
+                <div class="col-md-6"><div id="chart_bottom" style="height:400px;width:600px;"></div></div>
+        </div>
+
+<div class="row">
+<div class="col-md-12"><div id="vehicle_plot" style="height:400px;width:1200px;"></div></div>
+</div>
+
+    </div>
+{% endblock %}
